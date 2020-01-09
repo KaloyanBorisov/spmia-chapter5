@@ -5,7 +5,7 @@ services:
      ports:
          - "8761:8761"
   configserver:
-      image: johncarnell/tmx-confsvr:chapter5
+      image: kaloyan84/tmx-confsvr:chapter5
       ports:
          - "8888:8888"
       environment:
@@ -21,7 +21,7 @@ services:
         - POSTGRES_PASSWORD=p0stgr@s
         - POSTGRES_DB=eagle_eye_local
   licensingservice:
-      image: johncarnell/tmx-licensing-service:chapter5
+      image: kaloyan84/tmx-licensing-service:chapter5
       ports:
         - "8080:8080"
         - "8090:8090"
@@ -35,7 +35,7 @@ services:
         EUREKASERVER_PORT:   "8761"
         ENCRYPT_KEY:       "IMSYMMETRIC"
   organizationservice:
-      image: johncarnell/tmx-organization-service:chapter5
+      image: kaloyan84/tmx-organization-service:chapter5
       ports:
         - "8085:8085"
       environment:
@@ -47,3 +47,29 @@ services:
         DATABASESERVER_PORT: "5432"
         EUREKASERVER_PORT:   "8761"
         ENCRYPT_KEY:       "IMSYMMETRIC"
+  HystrixDashboard:
+    image: kaloyan84/tmx-hystrix-dashboard:chapter5
+    ports:
+      - "7979:7979"
+    environment:
+      PROFILE: "default"
+      SERVER_PORT: "7979"
+      CONFIGSERVER_URI: "http://configserver:8888"
+      EUREKASERVER_URI: "http://eurekaserver:8761/eureka/"
+      CONFIGSERVER_PORT:   "8888"
+      DATABASESERVER_PORT: "5432"
+      EUREKASERVER_PORT:   "8761"
+      ENCRYPT_KEY:       "IMSYMMETRIC"
+  TurbineService:
+    image: kaloyan84/tmx-turbine-service:chapter5
+    ports:
+      - "8989:8989"
+    environment:
+      PROFILE: "default"
+      SERVER_PORT: "8989"
+      CONFIGSERVER_URI: "http://configserver:8888"
+      EUREKASERVER_URI: "http://eurekaserver:8761/eureka/"
+      CONFIGSERVER_PORT:   "8888"
+      DATABASESERVER_PORT: "5432"
+      EUREKASERVER_PORT:   "8761"
+      ENCRYPT_KEY:       "IMSYMMETRIC"

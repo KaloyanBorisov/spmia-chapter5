@@ -14,4 +14,8 @@ logging:
     org.springframework.web: WARN
     com.thoughtmechanix: DEBUG
 
-        
+management:
+  endpoints:
+    web:
+      exposure:
+        include: hystrix.stream

@@ -31,6 +31,18 @@ public class LicenseService {
     OrganizationRestTemplateClient organizationRestClient;
 
 
+    @HystrixCommand(fallbackMethod = "fallbackLicense",
+            threadPoolKey = "getLicenseThreadPool",
+            threadPoolProperties =
+                    {@HystrixProperty(name = "coreSize",value="30"),
+                            @HystrixProperty(name="maxQueueSize", value="10")},
+            commandProperties={
+                    @HystrixProperty(name="circuitBreaker.requestVolumeThreshold", value="10"),
+                    @HystrixProperty(name="circuitBreaker.errorThresholdPercentage", value="75"),
+                    @HystrixProperty(name="circuitBreaker.sleepWindowInMilliseconds", value="7000"),
+                    @HystrixProperty(name="metrics.rollingStats.timeInMilliseconds", value="15000"),
+                    @HystrixProperty(name="metrics.rollingStats.numBuckets", value="5")}
+    )
     public License getLicense(String organizationId,String licenseId) {
         License license = licenseRepository.findByOrganizationIdAndLicenseId(organizationId, licenseId);
 
@@ -42,6 +54,14 @@ public class LicenseService {
                 .withContactEmail( org.getContactEmail() )
                 .withContactPhone( org.getContactPhone() )
                 .withComment(config.getExampleProperty());
+    }
+
+    private License fallbackLicense (String organizationId,String licenseId){
+        License license = new License()
+                .withId(licenseId)
+                .withOrganizationId(organizationId)
+                .withProductName("Sorry no licensing information currently available");
+        return license;
     }
 
     @HystrixCommand
@@ -65,7 +85,7 @@ public class LicenseService {
         }
     }
 
-    @HystrixCommand(//fallbackMethod = "buildFallbackLicenseList",
+    @HystrixCommand(fallbackMethod = "fallbackLicenseList",
             threadPoolKey = "licenseByOrgThreadPool",
             threadPoolProperties =
                     {@HystrixProperty(name = "coreSize",value="30"),
@@ -78,13 +98,13 @@ public class LicenseService {
                      @HystrixProperty(name="metrics.rollingStats.numBuckets", value="5")}
     )
     public List<License> getLicensesByOrg(String organizationId){
-        logger.debug("LicenseService.getLicensesByOrg  Correlation id: {}", UserContextHolder.getContext().getCorrelationId());
+        logger.debug("LicenseService.getLicensesByOrg  Correlation id: {}",
+                UserContextHolder.getContext().getCorrelationId());
         randomlyRunLong();
-
         return licenseRepository.findByOrganizationId(organizationId);
     }
 
-    private List<License> buildFallbackLicenseList(String organizationId){
+    private List<License> fallbackLicenseList(String organizationId){
         List<License> fallbackList = new ArrayList<>();
         License license = new License()
                 .withId("0000000-00-00000")
@@ -95,18 +115,58 @@ public class LicenseService {
         return fallbackList;
     }
 
+    @HystrixCommand(//fallbackMethod = "buildFallbackLicenseList",
+            threadPoolKey = "saveLicenseThreadPool",
+            threadPoolProperties =
+                    {@HystrixProperty(name = "coreSize",value="30"),
+                            @HystrixProperty(name="maxQueueSize", value="10")},
+            commandProperties={
+                    @HystrixProperty(name="circuitBreaker.requestVolumeThreshold", value="10"),
+                    @HystrixProperty(name="circuitBreaker.errorThresholdPercentage", value="75"),
+                    @HystrixProperty(name="circuitBreaker.sleepWindowInMilliseconds", value="7000"),
+                    @HystrixProperty(name="metrics.rollingStats.timeInMilliseconds", value="15000"),
+                    @HystrixProperty(name="metrics.rollingStats.numBuckets", value="5")}
+    )
     public void saveLicense(License license){
         license.withId( UUID.randomUUID().toString());
 
         licenseRepository.save(license);
     }
 
+    @HystrixCommand(//fallbackMethod = "buildFallbackLicenseList",
+            threadPoolKey = "updateLicenseThreadPool",
+            threadPoolProperties =
+                    {@HystrixProperty(name = "coreSize",value="30"),
+                            @HystrixProperty(name="maxQueueSize", value="10")},
+            commandProperties={
+                    @HystrixProperty(name="circuitBreaker.requestVolumeThreshold", value="10"),
+                    @HystrixProperty(name="circuitBreaker.errorThresholdPercentage", value="75"),
+                    @HystrixProperty(name="circuitBreaker.sleepWindowInMilliseconds", value="7000"),
+                    @HystrixProperty(name="metrics.rollingStats.timeInMilliseconds", value="15000"),
+                    @HystrixProperty(name="metrics.rollingStats.numBuckets", value="5")}
+    )
     public void updateLicense(License license){
       licenseRepository.save(license);
     }
 
-    public void deleteLicense(License license){
-        licenseRepository.delete( license.getLicenseId());
+    @HystrixCommand(fallbackMethod = "buildFallbackDelete",
+            threadPoolKey = "deleteLicenseThreadPool",
+            threadPoolProperties =
+                    {@HystrixProperty(name = "coreSize",value="30"),
+                            @HystrixProperty(name="maxQueueSize", value="10")},
+            commandProperties={
+                    @HystrixProperty(name="circuitBreaker.requestVolumeThreshold", value="10"),
+                    @HystrixProperty(name="circuitBreaker.errorThresholdPercentage", value="75"),
+                    @HystrixProperty(name="circuitBreaker.sleepWindowInMilliseconds", value="7000"),
+                    @HystrixProperty(name="metrics.rollingStats.timeInMilliseconds", value="15000"),
+                    @HystrixProperty(name="metrics.rollingStats.numBuckets", value="5")}
+    )
+    public String deleteLicense(String licenseId){
+        licenseRepository.delete(new License().withId(licenseId));
+        return "OK";
     }
 
+    private String buildFallbackDelete(String licenseId){
+        return "Requested license ID: "+licenseId+" doesn't exist!";
+    }
 }

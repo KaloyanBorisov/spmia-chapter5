@@ -40,13 +40,22 @@ public class ThreadLocalAwareStrategy extends HystrixConcurrencyStrategy{
     public ThreadPoolExecutor getThreadPool(HystrixThreadPoolKey threadPoolKey,
                                             HystrixProperty<Integer> corePoolSize,
                                             HystrixProperty<Integer> maximumPoolSize,
-                                            HystrixProperty<Integer> keepAliveTime, TimeUnit unit,
+                                            HystrixProperty<Integer> keepAliveTime,
+                                            TimeUnit unit,
                                             BlockingQueue<Runnable> workQueue) {
         return existingConcurrencyStrategy != null
-                ? existingConcurrencyStrategy.getThreadPool(threadPoolKey, corePoolSize,
-                maximumPoolSize, keepAliveTime, unit, workQueue)
-                : super.getThreadPool(threadPoolKey, corePoolSize, maximumPoolSize,
-                keepAliveTime, unit, workQueue);
+                ? existingConcurrencyStrategy.getThreadPool(threadPoolKey,
+                                                            corePoolSize,
+                                                            maximumPoolSize,
+                                                            keepAliveTime,
+                                                            unit,
+                                                            workQueue)
+                : super.getThreadPool(  threadPoolKey,
+                                        corePoolSize,
+                                        maximumPoolSize,
+                                        keepAliveTime,
+                                        unit,
+                                        workQueue);
     }
 
     @Override
